@@ -1070,9 +1070,15 @@ func (daemon *Daemon) ConnectToNetwork(ctx context.Context, ctr *container.Conta
 
 		n, err := daemon.FindNetwork(idOrName)
 		if err == nil && n != nil {
+			if _, ok := ctr.NetworkSettings.Networks[idOrName]; ok {
+				return fmt.Errorf("endpoint with name %s already exists in network %s", idOrName, ctr.Name)
+			}
+
 			if err := daemon.updateNetworkConfig(ctr, n, endpointConfig, true); err != nil {
 				return err
 			}
+		} else if err != nil && n == nil {
+			return err
 		} else {
 			ctr.NetworkSettings.Networks[idOrName] = &network.EndpointSettings{
 				EndpointSettings: endpointConfig,
